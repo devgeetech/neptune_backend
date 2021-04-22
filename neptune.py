@@ -4,7 +4,12 @@ import re
 from collections import Counter
 nlp = spacy.load('en_core_web_md')
 
-event_list = []
+#get time
+from datetime import datetime
+now = datetime.now()
+
+event_list = {}
+location_dictionary = {}
 #dset = pd.read_csv('napa_earthquake_unaffected_filtered_hash_cleaned.txt', encoding='ISO-8859–1', delimiter='\t')
 #dset = pd.read_csv('napa_earthquake_complete.txt', encoding='ISO-8859–1', delimiter='\t')
 
@@ -36,7 +41,7 @@ for index, row in newdset.iterrows():
 # High-frequency words:
 most_important_topics = []
 TopicCount = Counter(" ".join(newdset.tweet).split()).most_common(15)
-print(TopicCount)
+#print(TopicCount)
 for topic_name in TopicCount:
      most_important_topics.append(topic_name[0])
 print(most_important_topics)
@@ -81,10 +86,6 @@ for index, row in newdset.iterrows():
   if index==20:
     break
 
-# Setting up dictionaries
-#state_list = ['California', 'Texas', 'New Jersey', 'Nevada']
-location_dictionary = {}
-
 # NER
 for index, row in newdset.iterrows():
   row_nlp = nlp(row.tweet)
@@ -97,8 +98,8 @@ for index, row in newdset.iterrows():
             location_dictionary[loc_name] = 0
           location_dictionary[loc_name] = location_dictionary[loc_name] + 1 
         #print(ent.text+ "\t"+ str(row.lat) + "\t" + str(row.long))
-  if index==750:
-       break
+  #if index==750:
+       #break
 
 print(location_dictionary)
 
@@ -111,11 +112,37 @@ print(most_frequent_locations)
 #print(most_frequent_location)
 
 # Updating Event Dictionary
-event_list.append({event_type: most_frequent_locations})
+#event_list.append({event_type: most_frequent_locations})
+#event_list.append({"event_type": event_type, "locations": most_frequent_locations})
+event_list[event_type] = most_frequent_locations
 print(event_list)
 
+# Splitting location names and frequencies
+loc_names = []
+loc_freqs = []
+for el in most_frequent_locations:
+     loc_names.append(el[0])
+     loc_freqs.append(str(el[1]))
+          
 
+#Saving data to MongoDB
+import requests
 
+url = 'https://us-east-1.aws.realm.mongodb.com/api/client/v2.0/app/neptune_realm_1-uwjwy/graphql'
+headers = {
+  'apiKey': 'tnpTbJUWMxGtVF5jHebxZRmjlI7Lxm45W0Gabc6diaVqs2IaVpzpm3Fg5gXzQu4A',
+  'Content-Type': 'application/json'
+}
+#data = "\t{{\r\n\t  \t\"query\": \"mutation($event_type:String, $location_names:[String], $frequencies: [String]) {{ updateOneCurrent_event( query: {{ event_type: $event_type }} set: {{  locations: $location_names, location_frequency: $frequencies }} ) {{ event_type locations location_frequency }} }}\",\r\n\t\t\"variables\": {{\r\n          \"event_name\": {event_type},\r\n          \"location_names\": {loc_names},\r\n          \"frequencies\": {loc_freqs}\r\n        }}\r\n\t}}".format(event_type=event_type, loc_names=loc_names, loc_freqs=loc_freqs)
+data = "\t{{\r\n\t  \t\"query\": \"mutation {{ updateOneCurrent_event( query: {{ event_type: \\\"{ev}\\\" }} set: {{  locations: [\\\"{loc2}\\\", \\\"{loc1}\\\", \\\"{loc0}\\\"], location_frequency: [\\\"{freq2}\\\", \\\"{freq1}\\\", \\\"{freq0}\\\"] }} ) {{ event_type locations location_frequency }} }}\",\r\n\t\t\"variables\": null\r\n\t}}".format(ev=event_type, loc2=loc_names[2], loc1=loc_names[1], loc0=loc_names[0], freq2=loc_freqs[2], freq1=loc_freqs[1], freq0=loc_freqs[0])
+response = requests.request(
+  'POST',
+  'https://us-east-1.aws.realm.mongodb.com/api/client/v2.0/app/neptune_realm_1-uwjwy/graphql',
+  data=data,
+  headers=headers,
+)
+
+print(response.json())
 
 
 
