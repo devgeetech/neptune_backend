@@ -1,6 +1,7 @@
 import spacy
 import pandas as pd
 import re
+import datetime
 from collections import Counter
 nlp = spacy.load('en_core_web_md')
 nlp2 = spacy.load('./content')
@@ -95,8 +96,9 @@ for index, row in newdset.iterrows():
   if row_nlp2.ents:
       for ent in row_nlp2.ents:
            if ent.label_=="HLP":
-                help_tweets[index]={"tweet": "", "location": ""}
+                help_tweets[index]={"tweet": "", "location": "", "timestamp": ""}
                 help_tweets[index]['tweet']=(dset.loc[index].tweet)
+                help_tweets[index]['timestamp']=(dset.loc[index].time)
   if row_nlp.ents:
     for ent in row_nlp.ents:
       if ent.label_=="GPE":
@@ -111,16 +113,11 @@ for index, row in newdset.iterrows():
   #if index==750:
        #break
 
-#print(help_tweets)
-#print(location_dictionary)
-
 most_frequent_locations = sorted(location_dictionary.items(), key = lambda kv:(kv[1], kv[0]))
 most_frequent_locations = most_frequent_locations[(len(most_frequent_locations)-3):]
-#print(most_frequent_locations)
 
 # Most frequent location
 #most_frequent_location = max(location_dictionary, key=location_dictionary.get)
-#print(most_frequent_location)
 
 # Updating Event Dictionary
 #event_list.append({event_type: most_frequent_locations})
@@ -134,25 +131,40 @@ loc_freqs = []
 for el in most_frequent_locations:
      loc_names.append(el[0])
      loc_freqs.append(str(el[1]))
-          
+     
+    
+# Parsing help tweets to be compatible for GraphQL     
+help_tweet_str = ''  
+for h_twt in list(help_tweets.values()):
+     help_tweet_str = "{orgStr}{{tweet:\\\"{rowTweet}\\\", location:\\\"{rowLoc}\\\", timestamp: \\\"{rowTime}\\\", status: \\\"1\\\" }},".format(orgStr=help_tweet_str, rowTweet=h_twt['tweet'], rowLoc=h_twt['location'], rowTime=datetime.strptime(h_twt['timestamp'], "%Y-%m-%d %H:%M:%S"))
+print(help_tweet_str[:-1])
 
 #Saving data to MongoDB
-#import requests
+import requests
 
-#url = 'https://us-east-1.aws.realm.mongodb.com/api/client/v2.0/app/neptune_realm_1-uwjwy/graphql'
-#headers = {
- # 'apiKey': 'tnpTbJUWMxGtVF5jHebxZRmjlI7Lxm45W0Gabc6diaVqs2IaVpzpm3Fg5gXzQu4A',
- # 'Content-Type': 'application/json'
-#}
-#data = "\t{{\r\n\t  \t\"query\": \"mutation {{ updateOneCurrent_event( query: {{ event_type: \\\"{ev}\\\" }} set: {{  locations: [\\\"{loc2}\\\", \\\"{loc1}\\\", \\\"{loc0}\\\"], location_frequency: [\\\"{freq2}\\\", \\\"{freq1}\\\", \\\"{freq0}\\\"] }} ) {{ event_type locations location_frequency }} }}\",\r\n\t\t\"variables\": null\r\n\t}}".format(ev=event_type, loc2=loc_names[2], loc1=loc_names[1], loc0=loc_names[0], freq2=loc_freqs[2], freq1=loc_freqs[1], freq0=loc_freqs[0])
-#response = requests.request(
-#  'POST',
-#  'https://us-east-1.aws.realm.mongodb.com/api/client/v2.0/app/neptune_realm_1-uwjwy/graphql',
-#  data=data,
-#  headers=headers,
-#)
+url = 'https://us-east-1.aws.realm.mongodb.com/api/client/v2.0/app/neptune_realm_1-uwjwy/graphql'
+headers = {
+  'apiKey': 'tnpTbJUWMxGtVF5jHebxZRmjlI7Lxm45W0Gabc6diaVqs2IaVpzpm3Fg5gXzQu4A',
+  'Content-Type': 'application/json'
+}
+data = "\t{{\r\n\t  \t\"query\": \"mutation {{ updateOneCurrent_event( query: {{ event_type: \\\"{ev}\\\" }} set: {{  locations: [\\\"{loc2}\\\", \\\"{loc1}\\\", \\\"{loc0}\\\"], location_frequency: [\\\"{freq2}\\\", \\\"{freq1}\\\", \\\"{freq0}\\\"] }} ) {{ event_type locations location_frequency }} }}\",\r\n\t\t\"variables\": null\r\n\t}}".format(ev=event_type, loc2=loc_names[2], loc1=loc_names[1], loc0=loc_names[0], freq2=loc_freqs[2], freq1=loc_freqs[1], freq0=loc_freqs[0], hlp_twt_array=list(help_tweets.values()))
+data2 = "{{\"query\": \"mutation {{ insertManyHelp_tweets(data: [{hlp_twt_array}]){{ insertedIds}} }} \"}}".format(hlp_twt_array=help_tweet_str[:-1])
 
-#print(response.json())
+response = requests.request(
+  'POST',
+  'https://us-east-1.aws.realm.mongodb.com/api/client/v2.0/app/neptune_realm_1-uwjwy/graphql',
+  data=data,
+  headers=headers,
+)
+
+response2 = requests.request(
+  'POST',
+  'https://us-east-1.aws.realm.mongodb.com/api/client/v2.0/app/neptune_realm_1-uwjwy/graphql',
+  data=data2,
+  headers=headers,
+)
+
+print(response2.json())
 
 
 
