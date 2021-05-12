@@ -79,7 +79,7 @@ else:
 #if(event_type=="None"):
 #     return
 
-#print(event_type)
+print(event_type)
 
 # Semantic Analysis
 ground_truth_semantic = nlp("Earthquake")
@@ -147,7 +147,8 @@ headers = {
   'apiKey': 'tnpTbJUWMxGtVF5jHebxZRmjlI7Lxm45W0Gabc6diaVqs2IaVpzpm3Fg5gXzQu4A',
   'Content-Type': 'application/json'
 }
-data = "\t{{\r\n\t  \t\"query\": \"mutation {{ updateOneCurrent_event( query: {{ event_type: \\\"{ev}\\\" }} set: {{  locations: [\\\"{loc2}\\\", \\\"{loc1}\\\", \\\"{loc0}\\\"], location_frequency: [\\\"{freq2}\\\", \\\"{freq1}\\\", \\\"{freq0}\\\"] }} ) {{ event_type locations location_frequency }} }}\",\r\n\t\t\"variables\": null\r\n\t}}".format(ev=event_type, loc2=loc_names[2], loc1=loc_names[1], loc0=loc_names[0], freq2=loc_freqs[2], freq1=loc_freqs[1], freq0=loc_freqs[0], hlp_twt_array=list(help_tweets.values()))
+#data = "\t{{\r\n\t  \t\"query\": \"mutation {{ updateOneCurrent_event( query: {{ event_type: \\\"{ev}\\\" }} set: {{  locations: [\\\"{loc2}\\\", \\\"{loc1}\\\", \\\"{loc0}\\\"], location_frequency: [\\\"{freq2}\\\", \\\"{freq1}\\\", \\\"{freq0}\\\"] }} ) {{ event_type locations location_frequency }} }}\",\r\n\t\t\"variables\": null\r\n\t}}".format(ev=event_type, loc2=loc_names[2], loc1=loc_names[1], loc0=loc_names[0], freq2=loc_freqs[2], freq1=loc_freqs[1], freq0=loc_freqs[0], hlp_twt_array=list(help_tweets.values()))
+data = "\t{{\r\n\t  \t\"query\": \"mutation {{ upsertOneCurrent_event( query: {{ event_type: \\\"{ev}\\\" }} data: {{  event_type: \\\"{ev}\\\", locations: [\\\"{loc2}\\\", \\\"{loc1}\\\", \\\"{loc0}\\\"], location_frequency: [\\\"{freq2}\\\", \\\"{freq1}\\\", \\\"{freq0}\\\"] }} ) {{ event_type locations location_frequency }} }}\",\r\n\t\t\"variables\": null\r\n\t}}".format(ev=event_type, loc2=loc_names[2], loc1=loc_names[1], loc0=loc_names[0], freq2=loc_freqs[2], freq1=loc_freqs[1], freq0=loc_freqs[0], hlp_twt_array=list(help_tweets.values()))
 data2 = "{{\"query\": \"mutation {{ insertManyHelp_tweets(data: [{hlp_twt_array}]){{ insertedIds}} }} \"}}".format(hlp_twt_array=help_tweet_str[:-1])
 
 response = requests.request(
@@ -158,13 +159,13 @@ response = requests.request(
 )
 
 response2 = requests.request(
-  'POST',
+ 'POST',
   'https://us-east-1.aws.realm.mongodb.com/api/client/v2.0/app/neptune_realm_1-uwjwy/graphql',
   data=data2,
   headers=headers,
 )
 
-print(response2.json())
+print(response.json())
 
 
 
