@@ -113,9 +113,12 @@ for index, row in newdset.iterrows():
   #if index==750:
        #break
 
+print(location_dictionary)
+
 most_frequent_locations = sorted(location_dictionary.items(), key = lambda kv:(kv[1], kv[0]))
 most_frequent_locations = most_frequent_locations[(len(most_frequent_locations)-3):]
 
+print (most_frequent_locations)
 # Most frequent location
 #most_frequent_location = max(location_dictionary, key=location_dictionary.get)
 
