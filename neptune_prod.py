@@ -13,18 +13,14 @@ from pandas.io.json import json_normalize
 import spacy
 import pandas as pd
 import re
-import datetime
 from collections import Counter
+from datetime import datetime
 nlp = spacy.load('en_core_web_md')
 nlp2 = spacy.load('./content')
 
 # INITIALISING VARIABLES
-from datetime import datetime
 now = datetime.now()
-
 event_list = {}
-help_tweets = {}
-location_dictionary = {}
 
 # GETTING TWITTER DATA
 # To set your environment variables in your terminal run the following line:
@@ -37,7 +33,7 @@ def auth():
 
 def create_url():
     query = "earthquake OR cyclone -is:retweet"
-    tweet_fields = "tweet.fields=author_id,created_at,geo&max_results=100"
+    tweet_fields = "tweet.fields=author_id,created_at,geo&max_results=10"
     url = "https://api.twitter.com/2/tweets/search/recent?query={}&{}".format(
         query, tweet_fields
     )
@@ -62,6 +58,9 @@ url = create_url()
 headers = create_headers(bearer_token)
 i=0;
 while i<10:
+     # INITIALISING VARIABLES
+     help_tweets = {}
+     location_dictionary = {}
      # INITIALISING MAIN DATAFRAME
      json_response = connect_to_endpoint(url, headers)
      json_data_str = json.dumps(json_response, indent=4, sort_keys=True)
@@ -160,13 +159,23 @@ while i<10:
      #print (most_frequent_locations)
      
      # BUILDING EVENT LIST
-     event_list[event_type] = most_frequent_locations
-     #print(event_list)
+     for most_loc_i in most_frequent_locations:
+          if event_type not in event_list.keys():
+              event_list[event_type] = {most_loc_i[0]: most_loc_i[1]}      
+          elif most_loc_i[0] in event_list[event_type]:
+               event_list[event_type][most_loc_i[0]] = event_list[event_type][most_loc_i[0]] + most_loc_i[1]   
+          else:
+               event_list[event_type][most_loc_i[0]] = most_loc_i[1]
+     #event_list[event_type] = most_frequent_locations
+     
+     # Most frequent loc from event_list
+     event_loc_most = sorted(event_list[event_type].items(), key = lambda kv:(kv[1], kv[0]))
+     event_loc_most = event_loc_most[(len(event_loc_most)-3):]
      
      # Splitting location names and frequencies
      loc_names = []
      loc_freqs = []
-     for el in most_frequent_locations:
+     for el in event_loc_most:
           loc_names.append(el[0])
           loc_freqs.append(str(el[1]))
      
@@ -203,7 +212,7 @@ while i<10:
      print("iteration {}".format(i))
      i = i + 1     
      
-     time.sleep(60)
+     time.sleep(300)
 
 
 #def main():
