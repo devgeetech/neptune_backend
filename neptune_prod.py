@@ -94,7 +94,7 @@ while loop_i<10:
      tokenizer = nlp.tokenizer
      nlp.Defaults.stop_words |= {"?","I","!","...","omfg","wtf","omg","sismo","lol"} # updating stop word list
      for index, row in newdset.iterrows():
-       tweet_as_tokens = tokenizer(newdset.loc[index].text.lower())
+       tweet_as_tokens = tokenizer(newdset.loc[index].text)
        tokens_without_sw= [token.text for token in tweet_as_tokens if not token.text in all_stopwords]
        newdset.loc[index].text = ' '.join(tokens_without_sw)
      
@@ -160,7 +160,7 @@ while loop_i<10:
          break
     
      #NER
-     for index, row in newdset.iterrows():
+     for index, row in dset.iterrows():
        row_nlp = nlp(row.text)
        row_nlp2 = nlp2(row.text)
        if row_nlp2.ents:
@@ -179,9 +179,9 @@ while loop_i<10:
                  location_dictionary[loc_name] = 0
                location_dictionary[loc_name] = location_dictionary[loc_name] + 1 
      
-     #print(location_dictionary)
+     print(location_dictionary)
      most_frequent_locations = sorted(location_dictionary.items(), key = lambda kv:(kv[1], kv[0]))
-     most_frequent_locations = most_frequent_locations[(len(most_frequent_locations)-3):]
+     most_frequent_locations = most_frequent_locations[(len(most_frequent_locations)-5):]
      #print (most_frequent_locations)
      
      # BUILDING EVENT LIST
@@ -196,7 +196,7 @@ while loop_i<10:
      
      # Most frequent loc from event_list
      event_loc_most = sorted(event_list[event_type].items(), key = lambda kv:(kv[1], kv[0]))
-     event_loc_most = event_loc_most[(len(event_loc_most)-3):]
+     event_loc_most = event_loc_most[(len(event_loc_most)-5):]
      
      # Splitting location names and frequencies
      loc_names = []
@@ -204,9 +204,9 @@ while loop_i<10:
      for el in event_loc_most:
           loc_names.append(el[0])
           loc_freqs.append(str(el[1]))     
-     if len(loc_names) < 3:
+     if len(loc_names) < 5:
           loc_name_i = len(loc_names)
-          while loc_name_i < 3:
+          while loc_name_i < 5:
                loc_names.append("")
                loc_freqs.append(0) 
                loc_name_i = loc_name_i + 1
@@ -225,7 +225,7 @@ while loop_i<10:
        'charset':'utf-8'
      }
      #data = "\t{{\r\n\t  \t\"query\": \"mutation {{ updateOneCurrent_event( query: {{ event_type: \\\"{ev}\\\" }} set: {{  locations: [\\\"{loc2}\\\", \\\"{loc1}\\\", \\\"{loc0}\\\"], location_frequency: [\\\"{freq2}\\\", \\\"{freq1}\\\", \\\"{freq0}\\\"] }} ) {{ event_type locations location_frequency }} }}\",\r\n\t\t\"variables\": null\r\n\t}}".format(ev=event_type, loc2=loc_names[2], loc1=loc_names[1], loc0=loc_names[0], freq2=loc_freqs[2], freq1=loc_freqs[1], freq0=loc_freqs[0], hlp_twt_array=list(help_tweets.values()))
-     data = "\t{{\r\n\t  \t\"query\": \"mutation {{ upsertOneCurrent_event( query: {{ event_type: \\\"{ev}\\\" }} data: {{  event_type: \\\"{ev}\\\", locations: [\\\"{loc2}\\\", \\\"{loc1}\\\", \\\"{loc0}\\\"], location_frequency: [\\\"{freq2}\\\", \\\"{freq1}\\\", \\\"{freq0}\\\"] }} ) {{ event_type locations location_frequency }} }}\",\r\n\t\t\"variables\": null\r\n\t}}".format(ev=event_type, loc2=loc_names[2], loc1=loc_names[1], loc0=loc_names[0], freq2=loc_freqs[2], freq1=loc_freqs[1], freq0=loc_freqs[0], hlp_twt_array=list(help_tweets.values()))
+     data = "\t{{\r\n\t  \t\"query\": \"mutation {{ upsertOneCurrent_event( query: {{ event_type: \\\"{ev}\\\" }} data: {{  event_type: \\\"{ev}\\\", locations: [\\\"{loc4}\\\", \\\"{loc3}\\\", \\\"{loc2}\\\", \\\"{loc1}\\\", \\\"{loc0}\\\"], location_frequency: [\\\"{freq4}\\\", \\\"{freq3}\\\", \\\"{freq2}\\\", \\\"{freq1}\\\", \\\"{freq0}\\\"] }} ) {{ event_type locations location_frequency }} }}\",\r\n\t\t\"variables\": null\r\n\t}}".format(ev=event_type, loc4=loc_names[4], loc3=loc_names[3], loc2=loc_names[2], loc1=loc_names[1], loc0=loc_names[0], freq4=loc_freqs[4], freq3=loc_freqs[3], freq2=loc_freqs[2], freq1=loc_freqs[1], freq0=loc_freqs[0], hlp_twt_array=list(help_tweets.values()))
      data2 = "{{\"query\": \"mutation {{ insertManyHelp_tweets(data: [{hlp_twt_array}]){{ insertedIds}} }} \"}}".format(hlp_twt_array=help_tweet_str[:-1])
      
      response = requests.request(
