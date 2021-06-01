@@ -141,7 +141,7 @@ for el in most_frequent_locations:
 # Parsing help tweets to be compatible for GraphQL     
 help_tweet_str = ''  
 for h_twt in list(help_tweets.values()):
-     help_tweet_str = "{orgStr}{{tweet:\\\"{rowTweet}\\\", location:\\\"{rowLoc}\\\", timestamp: \\\"{rowTime}\\\", status: \\\"1\\\" }},".format(orgStr=help_tweet_str, rowTweet=h_twt['tweet'], rowLoc=h_twt['location'], rowTime=datetime.strptime(h_twt['timestamp'], "%Y-%m-%d %H:%M:%S"))
+     help_tweet_str = "{orgStr}{{tweet:\\\"{rowTweet}\\\", location:\\\"{rowLoc}\\\", timestamp: \\\"{rowTime}\\\", tweet_id: \\\"\\\", status: \\\"1\\\" }},".format(orgStr=help_tweet_str, rowTweet=h_twt['tweet'], rowLoc=h_twt['location'], rowTime=datetime.strptime(h_twt['timestamp'], "%Y-%m-%d %H:%M:%S"))
 print(help_tweet_str[:-1])
 
 #Saving data to MongoDB

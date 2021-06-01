@@ -32,7 +32,7 @@ def auth():
 
 
 def create_url():
-    query = "earthquake OR cyclone -is:retweet"
+    query = "-is:retweet lang:en (earthquake OR cyclone)"
     tweet_fields = "tweet.fields=author_id,created_at&max_results=100"
     url = "https://api.twitter.com/2/tweets/search/recent?query={}&{}".format(
         query, tweet_fields
@@ -166,9 +166,10 @@ while loop_i<10:
        if row_nlp2.ents:
            for ent in row_nlp2.ents:
                 if ent.label_=="HLP":
-                     help_tweets[index]={"tweet": "", "location": "", "timestamp": ""}
+                     help_tweets[index]={"tweet": "", "location": "", "timestamp": "", "tweet_id": ""}
                      help_tweets[index]['tweet']=(dset.loc[index].text)
                      help_tweets[index]['timestamp']=(dset.loc[index].created_at)
+                     help_tweets[index]['tweet_id']=(dset.loc[index].id)
        if row_nlp.ents:
          for ent in row_nlp.ents:
            if ent.label_=="GPE":
@@ -214,8 +215,8 @@ while loop_i<10:
      # Parsing help tweets to be compatible for GraphQL     
      help_tweet_str = ''  
      for h_twt in list(help_tweets.values()):
-          help_tweet_str = "{orgStr}{{tweet:\\\"{rowTweet}\\\", location:\\\"{rowLoc}\\\", timestamp: \\\"{rowTime}\\\", status: \\\"1\\\" }},".format(orgStr=help_tweet_str, rowTweet=h_twt['tweet'], rowLoc=h_twt['location'], rowTime=datetime.strptime(h_twt['timestamp'], "%Y-%m-%dT%H:%M:%S.000Z"))
-     #print(help_tweet_str[:-1])
+          help_tweet_str = "{orgStr}{{tweet:\\\"{rowTweet}\\\", location:\\\"{rowLoc}\\\", timestamp: \\\"{rowTime}\\\", tweet_id: \\\"{tweet_id}\\\", status: \\\"1\\\" }},".format(orgStr=help_tweet_str, rowTweet=h_twt['tweet'], rowLoc=h_twt['location'], tweet_id=h_twt['tweet_id'], rowTime=datetime.strptime(h_twt['timestamp'], "%Y-%m-%dT%H:%M:%S.000Z"))
+     print(help_tweet_str[:-1])
 
      #Saving data to MongoDB
      graphql_url = 'https://us-east-1.aws.realm.mongodb.com/api/client/v2.0/app/neptune_realm_1-uwjwy/graphql'
@@ -241,6 +242,8 @@ while loop_i<10:
        data=data2.encode('utf-8'),
        headers=graphql_headers,
      )
+     
+     print(response2.json())
      
 
      print("iteration {}".format(loop_i))
