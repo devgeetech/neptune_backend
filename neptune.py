@@ -1,13 +1,13 @@
 import spacy
 import pandas as pd
 import re
-import datetime
+import sys
+from datetime import datetime
 from collections import Counter
 nlp = spacy.load('en_core_web_md')
 nlp2 = spacy.load('./content')
 
 #get time
-from datetime import datetime
 now = datetime.now()
 
 event_list = {}
@@ -15,6 +15,7 @@ help_tweets = {}
 location_dictionary = {}
 #dset = pd.read_csv('napa_earthquake_unaffected_filtered_hash_cleaned.txt', encoding='ISO-8859–1', delimiter='\t')
 #dset = pd.read_csv('napa_earthquake_complete.txt', encoding='ISO-8859–1', delimiter='\t')
+#dset = pd.read_csv('non_event.csv', encoding='ISO-8859–1')
 
 #dset = pd.read_json('napa_earthquake_complete.json', encoding='ISO-8859–1')
 dset = pd.read_json('napa_earthquake_unaffected_filtered_hash_cleaned.json', encoding='ISO-8859–1')
@@ -75,6 +76,7 @@ elif fire_found:
   event_type = "Fire"
 else:
      event_type="None"
+     sys.exit()
 
 #if(event_type=="None"):
 #     return
