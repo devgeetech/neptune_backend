@@ -53,7 +53,7 @@ def connect_to_endpoint(url, headers):
     return response.json()
     
 # PROCESSING TWITTER DATA
-bearer_token = 'AAAAAAAAAAAAAAAAAAAAAGYZOAEAAAAAD%2FG4jnISJ1wxC%2BdpB9gCjBHnxVM%3DZA8S9wRWY7AJdgQJ3lMCsaf05uhtTHxRtWDY6bIYx9hkB4nB4S'
+bearer_token = 'ENTER_BEARER_TOKEN_HERE'
 url = create_url()
 headers = create_headers(bearer_token)
 loop_i=0;
@@ -249,7 +249,7 @@ while loop_i<10:
      print("iteration {}".format(loop_i))
      loop_i = loop_i + 1     
      
-     time.sleep(60)
+     time.sleep(300)
 
 
 #def main():
